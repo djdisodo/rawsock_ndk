@@ -25,7 +25,7 @@ use pnet::datalink::{
 use pnet::packet::ethernet::EthernetPacket;
 
 #[no_mangle]
-pub extern "system" fn Java_rawsock_RawSock_init(
+pub extern "system" fn Java_rio_github_cellularghost_RawSock_init(
     env: JNIEnv,
     this: JClass
 ) {
@@ -36,7 +36,7 @@ pub extern "system" fn Java_rawsock_RawSock_init(
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
 #[no_mangle]
-pub unsafe extern "system" fn Java_rawsock_RawSock_read(
+pub unsafe extern "system" fn Java_io_github_cellularghost_RawSock_read(
     env: JNIEnv,
     // this is the class that owns our
     // static method. Not going to be
@@ -65,7 +65,7 @@ pub unsafe extern "system" fn Java_rawsock_RawSock_read(
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn Java_rawsock_RawSock_write(
+pub unsafe extern "system" fn Java_io_github_cellularghost_RawSock_write(
 	env: JNIEnv,
 	// this is the class that owns our
 	// static method. Not going to be
@@ -88,7 +88,7 @@ pub unsafe extern "system" fn Java_rawsock_RawSock_write(
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn Java_HelloWorld_close(
+pub unsafe extern "system" fn Java_io_github_cellularghost_RawSock_close(
     env: JNIEnv,
     // this is the class that owns our
     // static method. Not going to be
