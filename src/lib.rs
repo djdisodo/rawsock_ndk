@@ -43,16 +43,19 @@ pub unsafe extern "system" fn Java_rawsock_RawSock_read(
     // used, but still needs to have
     // an argument slot
     class: JClass,
-) -> jbyteArray {
+	buffer: jbyteArray,
+	start: jint
+) -> jint {
 	let desc = env.get_field_id(class, "self", "J").unwrap();
 	let ptr = env.get_field_unchecked(class, desc, JavaType::Primitive(Primitive::Long)).unwrap();
 	let mut raw_sock = Box::from_raw(ptr.j().unwrap() as *mut RawSock);
 	return match raw_sock.rx.next() {
 		Ok(packet) => {
-			env.byte_array_from_slice(packet).unwrap()
+			env.set_byte_array_regions(jbyteArray, start, packet);
+			packet.len()
 		},
-		Err(_) => env.byte_array_from_slice(&[]).unwrap()
-	};
+		Err(_) => 0
+	} as i32;
 }
 
 #[no_mangle]
@@ -64,6 +67,7 @@ pub unsafe extern "system" fn Java_rawsock_RawSock_write(
 	// an argument slot
 	class: JClass,
 	buffer: jbyteArray,
+	start: jint
 	len: jint
 ) {
 	let desc = env.get_field_id(class, "self", "J").unwrap();
@@ -73,7 +77,7 @@ pub unsafe extern "system" fn Java_rawsock_RawSock_write(
 		let a = unsafe {
 			&mut *(__buffer as *mut [u8] as *mut [i8])
 		};
-		env.get_byte_array_region(buffer, 0, a).unwrap()
+		env.get_byte_array_region(buffer, jint, a).unwrap()
 	});
 }
 
