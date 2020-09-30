@@ -51,10 +51,16 @@ pub unsafe extern "system" fn Java_rawsock_RawSock_read(
 	let mut raw_sock = Box::from_raw(ptr.j().unwrap() as *mut RawSock);
 	return match raw_sock.rx.next() {
 		Ok(packet) => {
-			env.set_byte_array_regions(jbyteArray, start, packet);
+			let a = unsafe {
+				&*(packet as *const [u8] as *const [i8])
+			};
+			env.set_byte_array_region(buffer, start, a);
 			packet.len()
 		},
-		Err(_) => 0
+		Err(e) => {
+			env.throw_new("java.io.IOException", e.to_string());
+			0
+		}
 	} as i32;
 }
 
@@ -67,7 +73,7 @@ pub unsafe extern "system" fn Java_rawsock_RawSock_write(
 	// an argument slot
 	class: JClass,
 	buffer: jbyteArray,
-	start: jint
+	start: jint,
 	len: jint
 ) {
 	let desc = env.get_field_id(class, "self", "J").unwrap();
@@ -77,7 +83,7 @@ pub unsafe extern "system" fn Java_rawsock_RawSock_write(
 		let a = unsafe {
 			&mut *(__buffer as *mut [u8] as *mut [i8])
 		};
-		env.get_byte_array_region(buffer, jint, a).unwrap()
+		env.get_byte_array_region(buffer, start, a).unwrap()
 	});
 }
 
@@ -118,7 +124,10 @@ impl RawSock {
 			.next()
 			.unwrap();
 
-		let (mut tx, mut rx) = match datalink::channel(&interface, Default::default()) {
+		let mut config: datalink::Config = Default::default();
+		config.read_timeout.replace(Duration::new(1, 0));
+
+		let (mut tx, mut rx) = match datalink::channel(&interface, config) {
 			Ok(Ethernet(tx, rx)) => (tx, rx),
 			Ok(_) => panic!("Unhandled channel type"),
 			Err(e) => panic!("An error occurred when creating the datalink channel: {}", e)
